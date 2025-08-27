@@ -1,0 +1,224 @@
+[build-system]
+requires = ["setuptools>=64", "wheel", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "website-status-checker"
+version = "1.0.0"
+description = "High-performance website status validation at scale"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Isreal Oyarinde", email = "contact@isrealoyarinde.com"},
+]
+maintainers = [
+    {name = "Isreal Oyarinde", email = "contact@isrealoyarinde.com"},
+]
+keywords = [
+    "website", "status", "checker", "http", "monitoring", "validation",
+    "async", "concurrent", "batch", "scale", "performance", "uptime"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators", 
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9", 
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Internet :: WWW/HTTP :: Site Management",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Networking :: Monitoring",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
+dependencies = [
+    "aiohttp>=3.8.0,<4.0.0",
+    "pandas>=1.5.0,<2.0.0",
+    "numpy>=1.21.0,<2.0.0",
+    "certifi>=2022.0.0",
+    "urllib3>=1.26.0,<2.0.0",
+    "click>=8.0.0,<9.0.0",
+    "python-dotenv>=0.19.0,<1.0.0",
+    "pyyaml>=6.0,<7.0",
+    "openpyxl>=3.0.0,<4.0.0",
+    "xlrd>=2.0.0,<3.0.0",
+    "psutil>=5.9.0,<6.0.0",
+    "validators>=0.18.0,<1.0.0",
+    "tqdm>=4.64.0,<5.0.0",
+]
+
+[project.optional-dependencies]
+performance = [
+    "aiodns>=3.0.0,<4.0.0",
+    "cchardet>=2.1.7,<3.0.0",
+    "orjson>=3.8.0,<4.0.0",
+]
+profiling = [
+    "memory-profiler>=0.60.0,<1.0.0",
+]
+dev = [
+    "pytest>=6.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "black>=22.0.0",
+    "flake8>=5.0.0",
+    "mypy>=1.0.0",
+    "isort>=5.10.0",
+    "pre-commit>=2.20.0",
+]
+docs = [
+    "sphinx>=5.0.0",
+    "sphinx-rtd-theme>=1.0.0",
+    "myst-parser>=0.18.0",
+]
+all = [
+    "aiodns>=3.0.0,<4.0.0", 
+    "cchardet>=2.1.7,<3.0.0",
+    "orjson>=3.8.0,<4.0.0",
+    "memory-profiler>=0.60.0,<1.0.0",
+]
+
+[project.scripts]
+website-status-checker = "cli:cli_entry_point"
+wsc = "cli:cli_entry_point"
+
+[project.urls]
+Homepage = "https://github.com/Primus-Izzy/website-status-checker"
+Documentation = "https://github.com/Primus-Izzy/website-status-checker/blob/main/README.md"
+Repository = "https://github.com/Primus-Izzy/website-status-checker"
+"Bug Tracker" = "https://github.com/Primus-Izzy/website-status-checker/issues"
+Changelog = "https://github.com/Primus-Izzy/website-status-checker/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["*.md", "*.txt", "*.yml", "*.yaml"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 100
+known_first_party = ["website_status_checker", "batch_processor", "cli"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "pandas.*",
+    "aiohttp.*",
+    "tqdm.*",
+    "openpyxl.*",
+    "xlrd.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "asyncio: marks tests as asyncio tests",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/conftest.py",
+    "*/examples/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = [
+    "E203",  # whitespace before ':'
+    "E501",  # line too long (handled by black)
+    "W503",  # line break before binary operator
+]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    ".venv",
+    ".tox",
+    "*.egg-info",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests", "examples"]
+skips = ["B101", "B601"]  # Skip assert_used and shell_injection_subprocess
+
+[tool.bandit.assert_used]
+skips = ["*/test_*.py", "*/tests/*.py"]

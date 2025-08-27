@@ -1,0 +1,47 @@
+# Website Status Checker - Core Dependencies
+# High-performance website status checking at scale
+
+# Core HTTP client and async support
+aiohttp>=3.8.0,<4.0.0
+asyncio-throttle>=1.0.0
+
+# Data processing and analysis
+pandas>=1.5.0,<2.0.0
+numpy>=1.21.0,<2.0.0
+
+# SSL/TLS support and certificates
+certifi>=2022.0.0
+urllib3>=1.26.0,<2.0.0
+
+# CLI and argument parsing
+click>=8.0.0,<9.0.0
+
+# Logging and configuration
+python-dotenv>=0.19.0,<1.0.0
+pyyaml>=6.0,<7.0
+
+# File format support
+openpyxl>=3.0.0,<4.0.0  # Excel support
+xlrd>=2.0.0,<3.0.0      # Legacy Excel support
+
+# Development and testing dependencies (optional)
+# Install with: pip install -r requirements.txt -r requirements-dev.txt
+
+# Performance monitoring
+psutil>=5.9.0,<6.0.0
+
+# Data validation
+validators>=0.18.0,<1.0.0
+
+# Progress bars and user interface
+tqdm>=4.64.0,<5.0.0
+
+# JSON handling improvements
+orjson>=3.8.0,<4.0.0; python_version >= "3.8"
+
+# Memory profiling (optional)
+memory-profiler>=0.60.0,<1.0.0; extra == "profiling"
+
+# Fast DNS resolution (optional performance boost)
+aiodns>=3.0.0,<4.0.0; extra == "performance"
+cchardet>=2.1.7,<3.0.0; extra == "performance"
