@@ -6,7 +6,8 @@
       "Bash(git mv:*)",
       "Bash(git rm:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nRestructure: Move core directories to root level\n\n- Flatten nested Website-Status-Checker directory structure\n- Move src/, tests/, docs/, examples/ to root\n- Move configuration files \\(pyproject.toml, setup.py, requirements.txt\\)\n- Move documentation files \\(CHANGELOG.md, CONTRIBUTING.md, etc.\\)\n- Remove duplicate README.md and LICENSE from nested directory\n- All moves use git mv to preserve commit history\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
