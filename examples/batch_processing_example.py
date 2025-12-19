@@ -17,8 +17,8 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from batch_processor import BatchProcessor, BatchConfig
-from website_status_checker import WebsiteStatusChecker
+from src.core.batch import BatchProcessor, BatchConfig
+from src.core.checker import WebsiteStatusChecker
 
 
 async def basic_batch_processing():

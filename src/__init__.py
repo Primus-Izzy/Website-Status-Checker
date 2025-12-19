@@ -40,15 +40,15 @@ __status__ = "Production"
 
 # Core imports for easy access
 try:
-    from .website_status_checker import (
+    from .core.checker import (
         WebsiteStatusChecker,
         StatusResult,
         ErrorCategory,
         CheckResult,
         CheckerStats,
     )
-    
-    from .batch_processor import (
+
+    from .core.batch import (
         BatchProcessor,
         BatchConfig,
         ProcessingStats,

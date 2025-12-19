@@ -18,8 +18,8 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from website_status_checker import WebsiteStatusChecker, StatusResult, ErrorCategory
-from batch_processor import BatchProcessor, BatchConfig
+from src.core.checker import WebsiteStatusChecker, StatusResult, ErrorCategory
+from src.core.batch import BatchProcessor, BatchConfig
 
 
 async def basic_single_url_check():

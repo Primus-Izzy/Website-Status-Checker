@@ -19,8 +19,8 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from website_status_checker import WebsiteStatusChecker
-from batch_processor import BatchProcessor, BatchConfig
+from ..core.checker import WebsiteStatusChecker
+from ..core.batch import BatchProcessor, BatchConfig
 
 
 def setup_logging(verbose: bool = False, debug: bool = False, log_file: Optional[str] = None):

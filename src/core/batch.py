@@ -21,7 +21,7 @@ from typing import List, Dict, Optional, Iterator, Tuple
 from dataclasses import dataclass, asdict
 import csv
 
-from website_status_checker import WebsiteStatusChecker, CheckResult, StatusResult
+from .checker import WebsiteStatusChecker, CheckResult, StatusResult
 
 
 @dataclass
