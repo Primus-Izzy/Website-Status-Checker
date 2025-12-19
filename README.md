@@ -61,9 +61,23 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Optional: Install GUI dependencies for web interface
+pip install -r requirements-gui.txt
 ```
 
-### Basic Usage
+### Choose Your Interface
+
+**Option 1: Web GUI (Recommended for most users)**
+```bash
+# Start the web interface
+python -m gui.main
+
+# Open browser to http://localhost:8000
+# Drag and drop your CSV/Excel file and start checking!
+```
+
+**Option 2: Command Line (For automation and scripting)**
 
 ```bash
 # Check a CSV file with URLs
@@ -390,10 +404,34 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 - **Discussions**: Ask questions in [GitHub Discussions](https://github.com/Primus-Izzy/website-status-checker/discussions)
 - **Email**: contact@isrealoyarinde.com (for enterprise inquiries)
 
+## 🌐 Web GUI (NEW!)
+
+A modern web interface is now available with real-time monitoring and interactive features!
+
+### Features
+- **Real-time Progress Tracking**: Live updates via Server-Sent Events
+- **Interactive Charts**: Visual status distribution and processing rate
+- **Drag-and-Drop Upload**: Easy CSV/Excel file handling
+- **Results Management**: Filter, sort, and export results
+- **Responsive Design**: Works on desktop and mobile
+
+### Quick Start
+```bash
+# Install GUI dependencies
+pip install -r requirements-gui.txt
+
+# Start the web server
+python -m gui.main
+
+# Open browser to http://localhost:8000
+```
+
+See [GUI_README.md](GUI_README.md) for complete GUI documentation.
+
 ## 🗺️ Roadmap
 
-- [ ] **Real-time Dashboard**: Web interface for monitoring
-- [ ] **API Server**: REST API for remote processing
+- [x] **Real-time Dashboard**: Web interface for monitoring ✅ COMPLETED
+- [x] **API Server**: REST API for remote processing ✅ COMPLETED
 - [ ] **Docker Support**: Containerized deployment
 - [ ] **Cloud Integration**: AWS/GCP batch processing
 - [ ] **Machine Learning**: Predictive website health scoring
