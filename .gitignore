@@ -60,3 +60,30 @@ Thumbs.db
 website_check_progress.json
 results/
 output/
+
+# Environment and secrets
+.env
+.env.local
+.env.production
+.env.*.local
+*.pem
+*.key
+*.crt
+
+# Backups
+backups/
+*.sql
+*.sql.gz
+
+# Coverage reports
+coverage.xml
+.coverage.*
+
+# Monitoring data
+monitoring/grafana-data/
+monitoring/prometheus-data/
+
+# Temporary files
+nul
+*.tmp
+*.temp
