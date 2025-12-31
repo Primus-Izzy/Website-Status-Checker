@@ -1,0 +1,166 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads-pvc
+  namespace: website-checker
+spec:
+  accessModes:
+    - ReadWriteMany  # Multiple pods can access
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: exports-pvc
+  namespace: website-checker
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: website-checker
+  namespace: website-checker
+  labels:
+    app: website-checker
+spec:
+  selector:
+    app: website-checker
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: website-checker
+  namespace: website-checker
+spec:
+  replicas: 3  # Horizontal scaling
+  selector:
+    matchLabels:
+      app: website-checker
+  template:
+    metadata:
+      labels:
+        app: website-checker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: web
+        image: ghcr.io/your-org/website-status-checker:latest  # Update with your image
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        # Load from ConfigMap
+        - name: ENV
+          valueFrom:
+            configMapKeyRef:
+              name: website-checker-config
+              key: ENV
+        - name: DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: website-checker-config
+              key: DEBUG
+        - name: HOST
+          valueFrom:
+            configMapKeyRef:
+              name: website-checker-config
+              key: HOST
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: website-checker-config
+              key: PORT
+        - name: WORKERS
+          valueFrom:
+            configMapKeyRef:
+              name: website-checker-config
+              key: WORKERS
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: website-checker-config
+              key: LOG_LEVEL
+        - name: LOG_FORMAT
+          valueFrom:
+            configMapKeyRef:
+              name: website-checker-config
+              key: LOG_FORMAT
+
+        # Load from Secrets
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: website-checker-secrets
+              key: SECRET_KEY
+        - name: ADMIN_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: website-checker-secrets
+              key: ADMIN_API_KEY
+
+        # Database connection
+        - name: DATABASE_URL
+          value: "postgresql://checker:$(DB_PASSWORD)@postgres:5432/website_checker"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: website-checker-secrets
+              key: DB_PASSWORD
+
+        volumeMounts:
+        - name: uploads
+          mountPath: /app/gui/uploads
+        - name: exports
+          mountPath: /app/gui/exports
+
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 40
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+      volumes:
+      - name: uploads
+        persistentVolumeClaim:
+          claimName: uploads-pvc
+      - name: exports
+        persistentVolumeClaim:
+          claimName: exports-pvc

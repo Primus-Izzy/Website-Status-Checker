@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: website-checker-config
+  namespace: website-checker
+data:
+  ENV: "production"
+  DEBUG: "false"
+  APP_NAME: "Website Status Checker"
+  APP_VERSION: "1.1.0"
+  HOST: "0.0.0.0"
+  PORT: "8000"
+  WORKERS: "4"
+  LOG_LEVEL: "INFO"
+  LOG_FORMAT: "json"
+  MAX_UPLOAD_SIZE_MB: "100"
+  RATE_LIMIT_ENABLED: "true"
+  RATE_LIMIT_UPLOADS_PER_MINUTE: "100"
+  RATE_LIMIT_REQUESTS_PER_HOUR: "1000"
+  SSL_VERIFY_DEFAULT: "true"
+  ENABLE_METRICS: "true"
+  ENABLE_SECURITY_HEADERS: "true"
+  JOB_RETENTION_HOURS: "24"
+  MAX_CONCURRENT_JOBS: "10"
