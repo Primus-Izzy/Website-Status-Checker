@@ -28,6 +28,9 @@ from pathlib import Path
 from typing import List, Tuple, Dict, Optional, Set
 from urllib.parse import urlparse, urljoin
 from dataclasses import dataclass, asdict
+
+# Import SSRF protection
+from src.utils.secrets import validate_url_safety
 from enum import Enum
 import pandas as pd
 
@@ -110,11 +113,12 @@ class WebsiteStatusChecker:
         retry_delay: float = 1.0,
         backoff_factor: float = 1.5,
         respect_robots: bool = False,
-        user_agent: str = None
+        user_agent: str = None,
+        verify_ssl: bool = True
     ):
         """
         Initialize the website status checker.
-        
+
         Args:
             max_concurrent: Maximum number of concurrent requests
             timeout: Request timeout in seconds
@@ -123,6 +127,9 @@ class WebsiteStatusChecker:
             backoff_factor: Exponential backoff multiplier for retries
             respect_robots: Whether to respect robots.txt (not implemented)
             user_agent: Custom user agent string
+            verify_ssl: Whether to verify SSL certificates (default: True)
+                       WARNING: Disabling SSL verification is a security risk and
+                       should only be used for testing or compatibility with legacy systems.
         """
         self.max_concurrent = max_concurrent
         self.timeout = timeout
@@ -130,6 +137,7 @@ class WebsiteStatusChecker:
         self.retry_delay = retry_delay
         self.backoff_factor = backoff_factor
         self.respect_robots = respect_robots
+        self.verify_ssl = verify_ssl
         
         # Default user agent
         self.user_agent = user_agent or (
@@ -140,25 +148,43 @@ class WebsiteStatusChecker:
         # Session and SSL context
         self.session: Optional[aiohttp.ClientSession] = None
         self.ssl_context = self._create_ssl_context()
-        
+
         # Statistics tracking
         self.stats = CheckerStats(start_time=time.time())
-        
+
         # Progress tracking
         self.progress_file = "website_check_progress.json"
         self.checked_urls: Set[str] = set()
-        
+
         # Logging
         self.logger = logging.getLogger(__name__)
+
+        # Warn if SSL verification is disabled
+        if not self.verify_ssl:
+            self.logger.warning(
+                "⚠️  SSL CERTIFICATE VERIFICATION DISABLED - This is a SECURITY RISK! "
+                "Only use this for testing or with legacy systems. "
+                "Man-in-the-middle attacks are possible."
+            )
     
     def _create_ssl_context(self) -> ssl.SSLContext:
-        """Create SSL context with permissive settings for broader compatibility."""
-        ssl_context = ssl.create_default_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE
-        # Allow weak ciphers for compatibility with older sites
-        ssl_context.set_ciphers("ALL:@SECLEVEL=0")
-        return ssl_context
+        """
+        Create SSL context based on verify_ssl setting.
+
+        Returns:
+            SSL context configured for secure or permissive operation
+        """
+        if self.verify_ssl:
+            # Secure default: verify certificates
+            return ssl.create_default_context()
+        else:
+            # Permissive context for legacy sites (SECURITY RISK!)
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = ssl.CERT_NONE
+            # Allow weak ciphers for compatibility with older sites
+            ssl_context.set_ciphers("ALL:@SECLEVEL=0")
+            return ssl_context
     
     async def create_session(self) -> None:
         """Create aiohttp session with optimized settings."""
@@ -176,7 +202,7 @@ class WebsiteStatusChecker:
             keepalive_timeout=30,
             use_dns_cache=True,
             ttl_dns_cache=300,
-            resolve=aiohttp.resolver.DefaultResolver(family=0)  # Support both IPv4 and IPv6
+            family=0  # Support both IPv4 and IPv6
         )
         
         self.session = aiohttp.ClientSession(
@@ -259,10 +285,17 @@ class WebsiteStatusChecker:
             clean_url = f"{parsed.scheme}://{parsed.netloc.lower()}"
             if parsed.path and parsed.path != '/':
                 clean_url += parsed.path
-            
+
+            # SSRF Protection: Validate URL safety
+            is_safe, warning = validate_url_safety(clean_url)
+            if not is_safe:
+                self.logger.warning(f"Blocked unsafe URL '{url}': {warning}")
+                return None
+
             return clean_url
-            
-        except Exception:
+
+        except (ValueError, AttributeError) as e:
+            self.logger.debug(f"URL normalization failed for '{url}': {e}")
             return None
     
     async def check_website(self, url: str) -> CheckResult:
@@ -316,7 +349,7 @@ class WebsiteStatusChecker:
                 async with self.session.get(
                     normalized_url,
                     allow_redirects=True,
-                    ssl=False  # Use our custom SSL context
+                    ssl=self.ssl_context
                 ) as response:
                     response_time = time.time() - start_time
                     
@@ -492,21 +525,24 @@ class WebsiteStatusChecker:
         }
         
         try:
-            with open(self.progress_file, 'w') as f:
+            with open(self.progress_file, 'w', encoding='utf-8') as f:
                 json.dump(progress, f, indent=2)
-        except Exception as e:
-            self.logger.warning(f"Could not save progress: {e}")
+        except (IOError, OSError, json.JSONEncodeError) as e:
+            self.logger.error(f"Could not save progress to {self.progress_file}: {e}")
+            self.logger.debug(f"Progress data: {progress}", exc_info=True)
     
     def load_progress(self) -> Tuple[List[str], Optional[str]]:
         """Load progress from file."""
         try:
-            with open(self.progress_file, 'r') as f:
+            with open(self.progress_file, 'r', encoding='utf-8') as f:
                 progress = json.load(f)
                 return progress.get('processed_batches', []), progress.get('current_batch')
         except FileNotFoundError:
+            self.logger.debug(f"Progress file not found: {self.progress_file}")
             return [], None
-        except Exception as e:
-            self.logger.warning(f"Could not load progress: {e}")
+        except (json.JSONDecodeError, IOError) as e:
+            self.logger.error(f"Could not load progress from {self.progress_file}: {e}")
+            self.logger.warning("Starting fresh without resume data")
             return [], None
     
     def get_stats(self) -> CheckerStats:

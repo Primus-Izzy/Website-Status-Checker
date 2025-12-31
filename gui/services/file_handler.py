@@ -73,7 +73,11 @@ class FileHandler:
             # Return row count
             return len(df)
 
-        except Exception:
+        except (pd.errors.ParserError, IOError, ValueError) as e:
+            # Log the error but return 0 to allow processing to continue
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Could not count URLs in {file_path}: {e}")
             return 0
 
     def get_upload_path(self, job_id: str) -> Path:

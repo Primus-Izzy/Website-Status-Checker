@@ -21,45 +21,39 @@ from typing import Optional
 
 from ..core.checker import WebsiteStatusChecker
 from ..core.batch import BatchProcessor, BatchConfig
+from ..config import get_app_config
+from ..utils.secrets import validate_environment, get_env_info
+from ..utils.logging_config import setup_logging as setup_structured_logging, get_logger
 
 
-def setup_logging(verbose: bool = False, debug: bool = False, log_file: Optional[str] = None):
-    """Setup logging configuration."""
-    
+def setup_logging(verbose: bool = False, debug: bool = False, log_file: Optional[str] = None, json_format: bool = False):
+    """
+    Setup logging configuration using structured logging.
+
+    Args:
+        verbose: Enable verbose (INFO level) logging
+        debug: Enable debug logging
+        log_file: Optional log file path
+        json_format: Use JSON format for logs
+    """
     # Determine log level
     if debug:
-        level = logging.DEBUG
+        level = "DEBUG"
     elif verbose:
-        level = logging.INFO
+        level = "INFO"
     else:
-        level = logging.WARNING
-    
-    # Create formatter
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        level = "WARNING"
+
+    # Determine log format
+    log_format = "json" if json_format else "text"
+
+    # Setup structured logging
+    setup_structured_logging(
+        log_level=level,
+        log_format=log_format,
+        log_file=log_file,
+        enable_console=True
     )
-    
-    # Setup root logger
-    root_logger = logging.getLogger()
-    root_logger.setLevel(level)
-    
-    # Console handler
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(level)
-    console_handler.setFormatter(formatter)
-    root_logger.addHandler(console_handler)
-    
-    # File handler if specified
-    if log_file:
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(level)
-        file_handler.setFormatter(formatter)
-        root_logger.addHandler(file_handler)
-    
-    # Reduce aiohttp logging noise
-    logging.getLogger('aiohttp').setLevel(logging.WARNING)
-    logging.getLogger('asyncio').setLevel(logging.WARNING)
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
@@ -211,13 +205,26 @@ Examples:
         type=str,
         help='Save logs to file'
     )
-    
+
+    parser.add_argument(
+        '--json-logs',
+        action='store_true',
+        help='Output logs in JSON format (useful for log aggregation)'
+    )
+
     parser.add_argument(
         '--quiet', '-q',
         action='store_true',
         help='Suppress all output except errors'
     )
-    
+
+    # Security options
+    parser.add_argument(
+        '--disable-ssl-verify',
+        action='store_true',
+        help='Disable SSL certificate verification (SECURITY RISK - use only for testing)'
+    )
+
     return parser
 
 
@@ -271,26 +278,60 @@ def print_banner():
 
 async def main():
     """Main CLI entry point."""
-    
+
     # Parse arguments
     parser = create_argument_parser()
     args = parser.parse_args()
-    
+
     try:
+        # Load application configuration
+        app_config = get_app_config()
+
         # Validate arguments
         validate_arguments(args)
-        
+
         # Setup logging
         if not args.quiet:
             setup_logging(
                 verbose=args.verbose,
                 debug=args.debug,
-                log_file=args.log_file
+                log_file=args.log_file,
+                json_format=args.json_logs
             )
-            print_banner()
+            if not args.json_logs:  # Only print banner in text mode
+                print_banner()
+
+        logger = get_logger(__name__)
+
+        # Validate environment for production
+        if app_config.is_production:
+            is_valid, issues = validate_environment(env="production")
+            if not is_valid:
+                logger.error("Production environment validation failed:")
+                for issue in issues:
+                    logger.error(f"  - {issue}")
+                if any("CRITICAL" in issue for issue in issues):
+                    logger.error("Critical issues detected. Exiting.")
+                    return 1
+
+        # Log environment info in debug mode
+        if args.debug:
+            logger.debug("Environment configuration:")
+            for key, value in get_env_info().items():
+                logger.debug(f"  {key}: {value}")
+
+        # Validate production config
+        if app_config.is_production:
+            config_issues = app_config.validate_production_config()
+            if config_issues:
+                logger.warning("Production configuration warnings:")
+                for issue in config_issues:
+                    logger.warning(f"  - {issue}")
         
-        logger = logging.getLogger(__name__)
-        
+        # Warn if SSL verification is disabled
+        if args.disable_ssl_verify:
+            logger.warning("⚠️  SSL VERIFICATION DISABLED - This is a security risk!")
+
         # Create batch configuration
         config = BatchConfig(
             batch_size=args.batch_size,
@@ -302,12 +343,14 @@ async def main():
             output_format=args.format,
             include_inactive=args.include_inactive and not args.active_only,
             include_errors=args.include_errors and not args.active_only,
-            memory_efficient=args.memory_efficient
+            memory_efficient=args.memory_efficient,
+            verify_ssl=not args.disable_ssl_verify
         )
         
         # Display configuration
         if not args.quiet:
             logger.info("Processing Configuration:")
+            logger.info(f"  Environment: {app_config.env}")
             logger.info(f"  Input file: {args.input_file}")
             logger.info(f"  Output file: {args.output}")
             logger.info(f"  URL column: {args.url_column}")
@@ -315,6 +358,7 @@ async def main():
             logger.info(f"  Concurrent requests: {config.max_concurrent}")
             logger.info(f"  Timeout: {config.timeout}s")
             logger.info(f"  Retry count: {config.retry_count}")
+            logger.info(f"  SSL verification: {config.verify_ssl}")
             logger.info(f"  Output format: {config.output_format}")
             logger.info(f"  Include inactive: {config.include_inactive}")
             logger.info(f"  Include errors: {config.include_errors}")

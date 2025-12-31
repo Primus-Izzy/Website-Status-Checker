@@ -16,12 +16,14 @@ import pandas as pd
 import logging
 import time
 import json
+import uuid
 from pathlib import Path
 from typing import List, Dict, Optional, Iterator, Tuple
 from dataclasses import dataclass, asdict
 import csv
 
 from .checker import WebsiteStatusChecker, CheckResult, StatusResult
+from ..utils.logging_config import get_logger, log_performance
 
 
 @dataclass
@@ -37,6 +39,7 @@ class BatchConfig:
     include_inactive: bool = True
     include_errors: bool = False
     memory_efficient: bool = True
+    verify_ssl: bool = True  # SSL certificate verification
 
 
 @dataclass
@@ -77,19 +80,31 @@ class BatchProcessor:
     def __init__(self, config: BatchConfig):
         """
         Initialize batch processor.
-        
+
         Args:
             config: BatchConfig object with processing settings
         """
         self.config = config
-        self.logger = logging.getLogger(__name__)
+        self.correlation_id = str(uuid.uuid4())
+        self.logger = get_logger(__name__, correlation_id=self.correlation_id)
         self.checker = WebsiteStatusChecker(
             max_concurrent=config.max_concurrent,
             timeout=config.timeout,
-            retry_count=config.retry_count
+            retry_count=config.retry_count,
+            verify_ssl=config.verify_ssl
         )
         self.stats = ProcessingStats()
         self.start_time = time.time()
+
+        self.logger.info(
+            "Batch processor initialized",
+            extra={
+                "batch_size": config.batch_size,
+                "max_concurrent": config.max_concurrent,
+                "timeout": config.timeout,
+                "verify_ssl": config.verify_ssl,
+            }
+        )
         
     def read_input_file(self, input_file: Path, url_column: str = 'url') -> Iterator[List[str]]:
         """
@@ -155,7 +170,14 @@ class BatchProcessor:
                     
             else:
                 raise ValueError(f"Unsupported file format: {file_ext}")
-                
+
+        except ValueError as e:
+            # Handle missing columns gracefully
+            if "Usecols do not match columns" in str(e) or "not found" in str(e):
+                self.logger.error(f"Error reading input file {input_file}: {e}")
+                return  # Return empty (no yields)
+            else:
+                raise
         except Exception as e:
             self.logger.error(f"Error reading input file {input_file}: {e}")
             raise
@@ -213,8 +235,9 @@ class BatchProcessor:
                         with open(output_file, 'r') as f:
                             existing_data = json.load(f)
                         data = existing_data + data
-                    except:
-                        pass
+                    except (json.JSONDecodeError, IOError) as e:
+                        self.logger.warning(f"Could not load existing JSON file for append: {e}")
+                        # Continue with new data only
                 
                 with open(output_file, 'w') as f:
                     json.dump(data, f, indent=2, default=str)
@@ -230,8 +253,9 @@ class BatchProcessor:
                     try:
                         existing_df = pd.read_excel(output_file)
                         df = pd.concat([existing_df, df], ignore_index=True)
-                    except:
-                        pass
+                    except (pd.errors.ParserError, IOError, ValueError) as e:
+                        self.logger.warning(f"Could not load existing Excel file for append: {e}")
+                        # Continue with new data only
                 
                 df.to_excel(output_file, index=False)
                 
@@ -318,10 +342,11 @@ class BatchProcessor:
                         df = pd.read_excel(input_file)
                         self.stats.total_input_urls = len(df)
                     else:
-                        with open(input_file, 'r') as f:
+                        with open(input_file, 'r', encoding='utf-8') as f:
                             self.stats.total_input_urls = sum(1 for line in f if line.strip())
-                except Exception as e:
+                except (pd.errors.ParserError, IOError, UnicodeDecodeError) as e:
                     self.logger.warning(f"Could not count total URLs: {e}")
+                    self.logger.debug(f"Will proceed with batch processing without total count")
             
             # Calculate total batches
             if self.stats.total_input_urls > 0:
@@ -362,9 +387,26 @@ class BatchProcessor:
             
             # Final statistics
             self.stats.elapsed_time = time.time() - self.start_time
+            duration_ms = self.stats.elapsed_time * 1000
+
+            # Log performance metrics
+            log_performance(
+                self.logger,
+                "batch_processing",
+                duration_ms,
+                extra={
+                    "total_urls": self.stats.total_input_urls,
+                    "active_websites": self.stats.active_websites,
+                    "inactive_websites": self.stats.inactive_websites,
+                    "error_websites": self.stats.error_websites,
+                    "processing_rate": self.stats.processing_rate,
+                    "batches_processed": self.stats.batches_processed,
+                }
+            )
+
             self.logger.info("Batch processing completed!")
             self.print_progress()
-            
+
             return self.stats
             
         except Exception as e:
