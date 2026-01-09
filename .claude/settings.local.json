@@ -14,7 +14,14 @@
       "Bash(pytest:*)",
       "Bash(pip show:*)",
       "Bash(pip install:*)",
-      "Bash(alembic init:*)"
+      "Bash(alembic init:*)",
+      "Bash(test -f:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(git push:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(set:*)"
     ]
   }
 }

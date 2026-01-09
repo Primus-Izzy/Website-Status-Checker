@@ -1,0 +1,16 @@
+url,normalized_url,status_result,status_code,error_category,error_message,response_time,timestamp,retry_count,final_url
+https://google.com,https://google.com,StatusResult.ACTIVE,200,None,,1.2215349674224854,1767987646.5096552,0,https://www.google.com/
+https://github.com,https://github.com,StatusResult.ACTIVE,200,None,,0.6086897850036621,1767987646.5134168,0,https://github.com
+https://stackoverflow.com,https://stackoverflow.com,StatusResult.INACTIVE,403,ErrorCategory.HTTP_ERROR,HTTP 403,0.6515903472900391,1767987646.5151114,0,https://stackoverflow.com
+https://python.org,https://python.org,StatusResult.ACTIVE,200,None,,0.9517850875854492,1767987646.5164027,0,https://www.python.org/
+https://reddit.com,https://reddit.com,StatusResult.ACTIVE,200,None,,1.2260692119598389,1767987646.5179129,0,https://www.reddit.com/
+https://twitter.com,https://twitter.com,StatusResult.ERROR,0,ErrorCategory.UNKNOWN_ERROR,"Unknown error: 400, message='Got more than 8190 bytes (9802) when reading Header value is too long.', url='https://",4.256482839584351,1767987647.8697932,2,
+https://linkedin.com,https://linkedin.com,StatusResult.ACTIVE,200,None,,1.4247958660125732,1767987647.8703508,0,https://www.linkedin.com/
+https://facebook.com,https://facebook.com,StatusResult.INACTIVE,400,ErrorCategory.HTTP_ERROR,HTTP 400,1.425926923751831,1767987647.8707721,0,https://www.facebook.com/
+https://youtube.com,https://youtube.com,StatusResult.ACTIVE,200,None,,1.429173469543457,1767987647.8712316,0,https://www.youtube.com/
+https://wikipedia.org,https://wikipedia.org,StatusResult.ACTIVE,200,None,,1.286355972290039,1767987647.871558,0,https://www.wikipedia.org/
+https://amazon.com,https://amazon.com,StatusResult.INACTIVE,202,ErrorCategory.HTTP_ERROR,HTTP 202,0.7890594005584717,1767987652.2344153,0,https://www.amazon.com/
+https://netflix.com,https://netflix.com,StatusResult.ACTIVE,200,None,,2.2682788372039795,1767987652.234689,0,https://www.netflix.com/
+https://isrealoyarinde.com,https://isrealoyarinde.com,StatusResult.ACTIVE,200,None,,1.008962631225586,1767987652.2348626,0,https://isrealoyarinde.com
+https://contentika.com,https://contentika.com,StatusResult.ACTIVE,200,None,,1.8562476634979248,1767987652.2350254,0,https://contentika.com
+https://spinah.com,https://spinah.com,StatusResult.ACTIVE,200,None,,1.3823447227478027,1767987652.2351902,0,https://spinah.com

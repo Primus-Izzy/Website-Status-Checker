@@ -1,0 +1,7 @@
+url,normalized_url,status_result,status_code,error_category,error_message,response_time,timestamp,retry_count,final_url
+https://google.com,https://google.com,StatusResult.ACTIVE,200,None,,1.6025023460388184,1767987584.4055884,0,https://www.google.com/
+https://github.com,https://github.com,StatusResult.ACTIVE,200,None,,0.49370837211608887,1767987584.4058483,0,https://github.com
+https://python.org,https://python.org,StatusResult.ACTIVE,200,None,,1.1445660591125488,1767987584.4065773,0,https://www.python.org/
+https://isrealoyarinde.com,https://isrealoyarinde.com,StatusResult.ACTIVE,200,None,,1.109708547592163,1767987584.9001164,0,https://isrealoyarinde.com
+https://contentika.com,https://contentika.com,StatusResult.ACTIVE,200,None,,2.1406033039093018,1767987585.5518627,0,https://contentika.com
+https://invalid..com,https://invalid..com,StatusResult.ERROR,0,ErrorCategory.UNKNOWN_ERROR,Unknown error: 'idna' codec can't encode character '\x2e' in position 8: label empty,1.0032298564910889,1767987586.0090697,1,
