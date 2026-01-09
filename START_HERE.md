@@ -13,6 +13,7 @@ A **world-class, enterprise-grade application** for checking website availabilit
 **✨ Key Features:**
 - ✅ Check thousands of websites in minutes
 - ✅ Web GUI with real-time progress
+- ✅ Desktop GUI (native tkinter app)
 - ✅ CLI tool for automation
 - ✅ Production-ready deployment (5 minutes!)
 - ✅ Complete monitoring & alerting
