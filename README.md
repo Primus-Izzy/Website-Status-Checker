@@ -68,7 +68,22 @@ pip install -r requirements-gui.txt
 
 ### Choose Your Interface
 
-**Option 1: Web GUI (Recommended for most users)**
+**Option 1: Desktop GUI (Native Application) ⭐ NEW!**
+```bash
+# Launch the native desktop application
+python run_desktop_gui.py
+
+# Features:
+# - Native tkinter interface (no browser needed)
+# - Real-time progress with live statistics
+# - Interactive results table with sorting/filtering
+# - Export to CSV, Excel, or JSON
+# - Works offline - no web server required
+#
+# See README_DESKTOP_GUI.md for full documentation
+```
+
+**Option 2: Web GUI (Recommended for team use)**
 ```bash
 # Start the web interface
 python -m gui.main
@@ -77,7 +92,7 @@ python -m gui.main
 # Drag and drop your CSV/Excel file and start checking!
 ```
 
-**Option 2: Command Line (For automation and scripting)**
+**Option 3: Command Line (For automation and scripting)**
 
 ```bash
 # Check a CSV file with URLs

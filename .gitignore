@@ -87,3 +87,6 @@ monitoring/prometheus-data/
 nul
 *.tmp
 *.temp
+
+# Claude Code
+.claude/
